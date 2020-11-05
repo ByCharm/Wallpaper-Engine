@@ -56,6 +56,6 @@ def run_engine(given_path):
         set_wallpaper(new_path)
 
 
-if __name__ == '__main__':
-    path = r'C:\Users\Franz\Desktop\pics'
-    change_pic_after_time(path)
+# if __name__ == '__main__':
+    # path = r'C:\Users\Franz\Desktop\pics'
+    # change_pic_after_time(path)
