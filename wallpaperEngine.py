@@ -1,15 +1,21 @@
 import winreg
-import win32gui, win32con
+import win32gui
+import win32con
+from win32api import GetSystemMetrics
 import os
 from random import randrange
-import time
+from PIL import Image
+
+# https://auth0.com/blog/image-processing-in-python-with-pillow/
+# https: // pypi.org / project / python - resize - image /
 
 
-def change_pic_after_time(given_path):
-    # https://docs.python.org/3/library/threading.html
-    # time.sleep(10) this function will freeze the gui - not recommended to use
-    # implementing two different threads - t1 will handle wallpaper engine and t2 will handle the gui
-    run_engine(given_path)
+def get_screen_width():
+    return GetSystemMetrics(0)
+
+
+def get_screen_height():
+    return GetSystemMetrics(1)
 
 
 def check_path(given_path):
@@ -23,16 +29,15 @@ def check_path(given_path):
 
 
 def select_pics_in_path(given_path):
-    # stores all the given items at path in list
-    path_items = os.listdir(given_path)
+    path_contains_items = os.listdir(given_path)
     picture_list = []
 
-    for possible_picture in path_items:
+    for possible_picture in path_contains_items:
         if possible_picture[-4:] == ".jpg" or possible_picture[-4:] == ".png":
             picture_list.append(possible_picture)
 
-    # random_num produces a num -> using this num to access a pic in pic_list
     length_picture_list = len(picture_list)
+
     num = random_number(length_picture_list)
     return picture_list[num]
 
@@ -40,6 +45,25 @@ def select_pics_in_path(given_path):
 def random_number(length_picture_list):
     num = randrange(1, length_picture_list)
     return num
+
+
+def create_resized_image_folder():
+    # contains the path to desktop on windows
+    desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
+    desktop = desktop + "\\" + "WallpaperEngine_ResizedImages"
+    if not os.access(desktop, os.F_OK):
+        os.mkdir(desktop, os.R_OK and os.W_OK)
+
+    return desktop
+
+
+def picture_resizing(picture_path):
+    folder = create_resized_image_folder()
+    # picture is the same variable as new_path
+    image = Image.open(picture_path)
+    image.thumbnail((get_screen_width(), get_screen_height()))
+    os.chdir(folder)
+    image.save("Wallpaper.png")
 
 
 def set_wallpaper(new_path):
@@ -51,11 +75,8 @@ def set_wallpaper(new_path):
 
 def run_engine(given_path):
     if check_path(given_path):
-        # new_path contains the picture that set_wallpaper will show
-        new_path = given_path + "\\" + select_pics_in_path(given_path)
-        set_wallpaper(new_path)
-
-
-# if __name__ == '__main__':
-    # path = r'C:\Users\Franz\Desktop\pics'
-    # change_pic_after_time(path)
+        current_picture = select_pics_in_path(given_path)
+        new_path = given_path + "\\" + current_picture
+        picture_resizing(new_path)
+        set_wallpaper(create_resized_image_folder() + "\\" + "Wallpaper.png")
+        return current_picture
